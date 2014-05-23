@@ -1,0 +1,113 @@
+<body>
+<h1>jEventSockets</h1>
+<h2>A Lightweight Object Event Framework</h2>
+
+<p> The purpose of this framework is to provide a simple approach to implementing direct
+	Publish / Subscribe, similar to that used by GUI frameworks, without requiring a lot
+	of repeated boilerplate code.  This is not an Event Bus or Grand Central Dispatch
+	eventing framework.
+</p>
+
+<h3>Events</h3>
+<p> Events in this framework are identified by their type.  All events must implement
+	{@link IEvent}, which is a simple tagging interface.  While this interface wasn't
+	strictly necessary, it helps ensure that event objects are appropriately declared.
+	It also serves as the base for two specialty variants.
+</p>
+<p> Event types implementing {@link ICancelableEvent} will abort event processing if
+	the fired event object returns <tt>true</tt> from {@link ICancelableEvent#canceled()}.
+</p>
+<p> Event objects of types implementing {@link IClonableEvent} will be cloned prior to
+	each listener call.  Ordinary event objects are simply passed to each registered
+	listener in turn.
+</p>
+
+<h3>Listeners</h3>
+<p> Listeners can be created either as instances of {@link IListener}, or as methods
+	of the listening object, using the @Listener annotation.
+</p>
+
+<h3>Event Sockets</h3>
+<p> Rather than requiring objects which expose (or fire) events to implement a plethora of
+	add*Listener and remove*Listener methods, the class exposes one Event Socket method
+	for each event type.  The value returned by the Event Socket method has the appropriate
+	add and remove methods.  The term Event Socket reflects the notions that event listeners
+	are plugged into the event they listen for.
+</p>
+<p> By convention, all Event Socket methods are named <tt>on<i>EventType</i></tt>.
+</p>
+
+<h3>Event Services</h3>
+<p> A class which wishes to expose events should have a private member of an appropriate
+	Event Service type.  The Event Service provides methods to get Event Sockets and to
+	fire events.  While the Event Sockets are expected to be part of the public interface
+	of the class, the firing of events is generally part of the private (or protected)
+	implementation.
+</p>
+<p> There are two base types of Event Services, which both implement {@link IEventService}.
+	The {@link SimpleEventService} is for classes which only need to expose a single event
+	type.  Such classes will typically expose a single Event Socket, named either <tt>onEvent</tt>
+	or <tt>on<i>EventType</i></tt>.  The socket is obtained by calling {@link SimpleEventService#getSocket()}.
+</p>
+<p> The {@link MultiEventService} is for classes which need to expose multiple events (i.e.
+	multiple event types).  In addition to supporting the socket for the root event type,
+	the MultiEventService has the {@link MultiEventService#getSocket( Class eventClass )}
+	method, which allows event listeners to be bound to a specific event type.  It also
+	supports binding all listeners on an object at once, using {@link MultiEventService#getAnnotationSocket()}.
+	See the {@link Listener} annotation's documentation for more details.
+</p>
+
+<h3>Example:</h3>
+<pre>
+	class EventA implements IEvent { ... }
+	class EventB implements IEvent { ... }
+
+	class ExposesEvents {
+		private MultiEventService&lt;IEvent&gt; eventService = new MultiEventService&lt;IEvent&gt;( IEvent.class );
+
+		public onEventA() {
+			return eventService.getSocket( EventA.class );
+		}
+
+		public onEventB() {
+			return eventService.getSocket( EventB.class );
+		}
+
+		public onEvents() {
+			return eventService.getAnnotationSocket();
+		}
+
+		public action() {
+			// ...
+			if ( someCondition ) {
+				eventService.fire( new EventA() );
+			} else {
+				eventService.fire( new EventB() );
+			}
+		}
+	}
+
+	// A sample of direct listener registration:
+	ExposesEvents model = ...;
+	model.onEventA().addListener( new IListener&lt;EventA&gt;() {
+		public void handle( EventA ) {
+			// listener code goes here
+		}
+	} );
+
+	// A sample of annotation listener registration:
+	class HasListeners {
+		@Listener
+		public void onEventA( EventA ) {
+			...
+		}
+
+		@Listener
+		public void onEventB( EventB ) {
+			...
+		}
+	}
+	HasListeners myObject = new HasListeners();
+	model.onEvents().addListenersFor( myObject );
+</pre>
+</body>
