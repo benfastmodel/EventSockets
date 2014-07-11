@@ -1,3 +1,18 @@
+/*
+   Copyright 2014 Fast Model Technologies, LLC
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+ */
 package com.fastmodel.commons.event;
 
 import java.lang.reflect.Method;
@@ -24,7 +39,7 @@ import java.util.List;
  *      using the service should be named <tt>on<i>EventType</i></tt>.</li>
  *
  * <li> All annotated event listeners on an object can be bound (or unbound) at once
- *      using {@link #getAnnotationSocket()}.  Listener methods on the object are
+ *      using {@link #getBinder()}.  Listener methods on the object are
  *      identified by the {@link Listener} annotation, and have a single parameter
  *      which is of the event type to be bound.  By convention, the delegating method
  *      on the object using the service should be named {@code onEvents}.</li>
@@ -33,6 +48,9 @@ import java.util.List;
  * @param <Event> The common root event type for this service.  {@link IEvent} may
  *               be used to create an instance which is capable of handling
  *               any event type.
+ *
+ * @author Ben Schreiber
+ * @version 1.0
  */
 public class MultiEventService< Event extends IEvent > extends AbstractEventService< Event > implements IMultiEventService< Event > {
 
@@ -104,7 +122,7 @@ public class MultiEventService< Event extends IEvent > extends AbstractEventServ
      *
      * @return An event binder
      */
-    public IEventBinder getAnnotationSocket() {
+    public IEventBinder getBinder() {
         return new AnnotationBinder();
     }
 
@@ -137,7 +155,7 @@ public class MultiEventService< Event extends IEvent > extends AbstractEventServ
          * @throws ListenerTypeMismatch if the listener method cannot be bound
          *                      to any event type that can be fired by this service
          */
-        public <ObjectType> ObjectType addListenersFor( final ObjectType object ) {
+        public <ObjectType> ObjectType bindAll( final ObjectType object ) {
 
             Class cl = object.getClass();
 
@@ -176,12 +194,12 @@ public class MultiEventService< Event extends IEvent > extends AbstractEventServ
 
         /**
          * Un-registers all listeners for the specified object previously registered with
-         * {@link #addListenersFor(Object)}.
+         * {@link #bindAll(Object)}.
          *
          * @param object The object
          * @return {@code true} if any listeners were removed.
          */
-        public boolean removeListenersFor( Object object ) {
+        public boolean unbindAll( Object object ) {
             boolean removed = false;
             for ( Iterator<ListenerWrapper<? extends Event>> iterator = getListeners().iterator(); iterator.hasNext(); ) {
                 ListenerWrapper<? extends Event> wrapper = iterator.next();
@@ -279,7 +297,7 @@ public class MultiEventService< Event extends IEvent > extends AbstractEventServ
          *         so that a caller can easily save the listener in the same
          *         statement that registers it.
          */
-        public IListener<SocketEvent> addListener( IListener<SocketEvent> listener ) {
+        public IListener<SocketEvent> bind( IListener<SocketEvent> listener ) {
             getListeners().add( new ListenerWrapper<SocketEvent>( socketEventClass, listener ));
             return listener;
         }
@@ -291,7 +309,7 @@ public class MultiEventService< Event extends IEvent > extends AbstractEventServ
          * @param listener The listener to remove
          * @return {@code true} if the specified listener was actually removed.
          */
-        public boolean removeListener( IListener<SocketEvent> listener ) {
+        public boolean unbind( IListener<SocketEvent> listener ) {
             for ( Iterator<ListenerWrapper<? extends Event>> iterator = getListeners().iterator(); iterator.hasNext(); ) {
                 ListenerWrapper<? extends Event> wrapper = iterator.next();
                 if ( wrapper.getListener() == listener && wrapper.getEventClass().equals( socketEventClass )) {
