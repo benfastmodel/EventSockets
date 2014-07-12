@@ -7,13 +7,6 @@ Publish / Subscribe, similar to that used by GUI frameworks, without requiring a
 of repeated boilerplate code.  This is not an Event Bus or Grand Central Dispatch
 eventing framework.
 
-I developed this framework as an attempt to overcome what I perceive as a design
-oversight in the Java programming language: the lack of native Events.  While
-some other such frameworks have existed for a long time, including the `EventListenerList`
-in Swing, I have found that they still require a significant amount of boilerplate
-code to utilize, enough so that I have sometimes opted to do without Events in my past
-object designs, even when they were warranted.
-
 
 ## Concepts and Usage
 
@@ -56,7 +49,7 @@ for each event type.  The value returned by the Event Socket method has the appr
 bind and unbind methods.  The term Event Socket reflects the notions that event listeners
 are plugged into the event they listen for.
 
-By convention, all Event Socket methods are named `on*EventType*`.
+By convention, all Event Socket methods are named on*EventType*.
 
 
 ### Event Services
@@ -70,7 +63,7 @@ implementation.
 There are two base types of Event Services, which both implement `IEventService`.
 The `SimpleEventService` is for classes which only need to expose a single event
 type.  Such classes will typically expose a single Event Socket, named either `onEvent`
-or `on*EventType*`.  The socket is obtained by calling `SimpleEventService.getSocket()`.
+or on*EventType*.  The socket is obtained by calling `SimpleEventService.getSocket()`.
 
 The `MultiEventService` is for classes which need to expose multiple events (i.e.
 multiple event types).  In addition to supporting the socket for the root event type,
